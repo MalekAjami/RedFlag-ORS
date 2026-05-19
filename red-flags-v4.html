@@ -1,0 +1,1229 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>RED FLAGS — ORS Medic-Help</title>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --red: #C0392B;
+  --red-dark: #96281B;
+  --orange: #E67E22;
+  --blue: #2471A3;
+  --green: #1E8449;
+  --gray: #626567;
+  --light: #F4F6F7;
+  --border: #D5D8DC;
+  --text: #1C2833;
+  --white: #ffffff;
+}
+
+html { height: 100%; }
+
+body {
+  min-height: 100%;
+  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Helvetica Neue', Arial, sans-serif;
+  font-size: 16px;
+  color: var(--text);
+  background: #EAECEE;
+  -webkit-text-size-adjust: 100%;
+}
+
+.app {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  height: 100dvh;
+  max-width: 540px;
+  margin: 0 auto;
+  background: var(--white);
+  box-shadow: 0 0 30px rgba(0,0,0,0.15);
+}
+
+/* ===== HEADER ===== */
+.header {
+  background: var(--red);
+  color: white;
+  padding: 14px 16px 12px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.25);
+  position: relative;
+  z-index: 10;
+}
+
+.header-brand { line-height: 1; }
+.header-ors { font-size: 22px; font-weight: 900; letter-spacing: -1px; }
+.header-sub { font-size: 10px; font-weight: 500; opacity: 0.8; letter-spacing: 0.5px; text-transform: uppercase; }
+
+.header-tag {
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 2px;
+  background: rgba(255,255,255,0.2);
+  border: 1px solid rgba(255,255,255,0.35);
+  padding: 4px 12px;
+  border-radius: 20px;
+}
+
+.step-dots {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.dot {
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.35);
+  transition: all 0.3s;
+}
+.dot.active { background: white; width: 18px; border-radius: 4px; }
+
+/* ===== CONTENT ===== */
+.content {
+  flex: 1;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-y: contain;
+  padding: 20px 16px 16px;
+}
+
+/* ===== FOOTER ===== */
+.footer {
+  padding: 14px 16px;
+  padding-bottom: max(14px, env(safe-area-inset-bottom));
+  background: var(--white);
+  border-top: 1px solid var(--border);
+  display: flex;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+/* ===== SCREENS ===== */
+.screen { display: none; }
+.screen.active { display: block; }
+
+/* ===== BUTTONS ===== */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 14px 18px;
+  border: none;
+  border-radius: 12px;
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+  user-select: none;
+  -webkit-user-select: none;
+  flex: 1;
+  min-height: 50px;
+  transition: opacity 0.1s;
+}
+.btn:active { opacity: 0.75; }
+
+.btn-primary  { background: var(--red);   color: white; }
+.btn-back     { background: var(--light); color: var(--text); border: 1.5px solid var(--border); flex: 0 0 auto; padding: 14px 16px; }
+.btn-print    { background: var(--blue);  color: white; }
+.btn-new      { background: var(--green); color: white; }
+
+/* ===== PAGE TITLE ===== */
+.page-title {
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--text);
+  margin-bottom: 18px;
+  padding-bottom: 12px;
+  border-bottom: 3px solid var(--red);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* ===== FORM ===== */
+.form-group { margin-bottom: 14px; }
+
+.form-label {
+  display: block;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--gray);
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  margin-bottom: 6px;
+}
+.req { color: var(--red); }
+
+.form-input, .form-select {
+  width: 100%;
+  padding: 13px 14px;
+  border: 2px solid var(--border);
+  border-radius: 10px;
+  font-size: 16px;
+  color: var(--text);
+  background: white;
+  -webkit-appearance: none;
+  appearance: none;
+  outline: none;
+  transition: border-color 0.2s;
+  font-family: inherit;
+}
+.form-input:focus, .form-select:focus { border-color: var(--red); }
+.form-input.error { border-color: var(--red); background: #FEF9F9; }
+
+.err-msg { color: var(--red); font-size: 12px; margin-top: 4px; display: none; font-weight: 600; }
+.err-msg.show { display: block; }
+
+/* ===== CARD SELECTOR ===== */
+.card-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.card-btn {
+  padding: 18px 10px;
+  border: 2px solid var(--border);
+  border-radius: 14px;
+  background: white;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+  text-align: center;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text);
+  line-height: 1.3;
+  transition: border-color 0.15s, background 0.15s;
+}
+.card-icon { font-size: 30px; margin-bottom: 8px; display: block; }
+.card-btn:active { border-color: var(--red); background: #FEF9F9; }
+
+/* ===== DEFINITION ===== */
+.def-box {
+  background: var(--light);
+  border-left: 4px solid var(--blue);
+  border-radius: 0 10px 10px 0;
+  padding: 14px 16px;
+  margin-bottom: 18px;
+  font-size: 14px;
+  line-height: 1.65;
+  color: #2C3E50;
+}
+
+.rf-warning {
+  background: #FEF9F9;
+  border: 2px solid var(--red);
+  border-radius: 12px;
+  padding: 16px;
+  text-align: center;
+  margin-bottom: 4px;
+  font-size: 14px;
+  line-height: 1.6;
+}
+.rf-warning .cond { font-weight: 700; color: var(--blue); }
+.rf-warning .trigger {
+  margin-top: 10px;
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--red);
+}
+
+/* ===== SYMPTOMS ===== */
+.sym-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 13px 14px;
+  border: 2px solid var(--border);
+  border-radius: 10px;
+  margin-bottom: 9px;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+  background: white;
+  transition: border-color 0.15s, background 0.15s;
+  min-height: 50px;
+}
+.sym-item.checked {
+  border-color: var(--red);
+  background: #FEF5F4;
+}
+
+.sym-cb {
+  width: 24px; height: 24px;
+  border: 2.5px solid var(--border);
+  border-radius: 6px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: white;
+  transition: all 0.15s;
+}
+.sym-item.checked .sym-cb {
+  background: var(--red);
+  border-color: var(--red);
+}
+.sym-cb-icon { display: none; color: white; font-size: 14px; font-weight: 900; }
+.sym-item.checked .sym-cb-icon { display: block; }
+
+.sym-text { font-size: 14px; line-height: 1.4; flex: 1; font-weight: 500; }
+
+.appel-box {
+  background: #FDFDE7;
+  border: 2px solid #F39C12;
+  border-radius: 12px;
+  padding: 14px;
+  text-align: center;
+  font-size: 14px;
+  font-weight: 600;
+  color: #7D6608;
+  margin-top: 6px;
+  margin-bottom: 8px;
+}
+
+/* ===== VITALS ===== */
+.etape-pill {
+  display: inline-block;
+  background: var(--blue);
+  color: white;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  padding: 4px 12px;
+  border-radius: 20px;
+  margin-bottom: 12px;
+}
+
+.vitals-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.vital-card {
+  background: var(--light);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 12px;
+}
+.vital-lbl {
+  font-size: 10px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--gray);
+  margin-bottom: 7px;
+}
+.vital-inp {
+  width: 100%;
+  padding: 10px 10px;
+  border: 2px solid var(--border);
+  border-radius: 8px;
+  font-size: 16px;
+  background: white;
+  -webkit-appearance: none;
+  appearance: none;
+  outline: none;
+  font-family: inherit;
+  transition: border-color 0.2s;
+}
+.vital-inp:focus { border-color: var(--blue); }
+
+/* ===== RED FLAG BADGE ===== */
+@keyframes rfPulse {
+  0%   { background: #C0392B; box-shadow: 0 0 18px rgba(192,57,43,0.75), 0 0 40px rgba(192,57,43,0.35); }
+  50%  { background: #E67E22; box-shadow: 0 0 28px rgba(230,126,34,0.9),  0 0 60px rgba(230,126,34,0.5); }
+  100% { background: #C0392B; box-shadow: 0 0 18px rgba(192,57,43,0.75), 0 0 40px rgba(192,57,43,0.35); }
+}
+
+.rf-badge {
+  border-radius: 16px;
+  padding: 20px 16px;
+  text-align: center;
+  color: white;
+  animation: rfPulse 1.6s ease-in-out infinite;
+  margin-bottom: 16px;
+}
+.rf-badge h2 { font-size: 26px; font-weight: 900; letter-spacing: 3px; margin-bottom: 5px; }
+.rf-badge p  { font-size: 13px; opacity: 0.92; font-weight: 600; }
+
+/* ===== SUMMARY ===== */
+.sum-card {
+  background: var(--light);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 14px;
+  margin-bottom: 12px;
+}
+.sum-lbl {
+  font-size: 10px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--gray);
+  margin-bottom: 7px;
+}
+.sum-val { font-size: 15px; font-weight: 600; line-height: 1.55; }
+
+/* ===== HOTLINE BOX ===== */
+.hotline-wrap {
+  border: 2px solid var(--blue);
+  border-radius: 12px;
+  padding: 14px;
+  margin-bottom: 14px;
+  background: #EBF5FB;
+}
+.hotline-title {
+  font-size: 14px;
+  font-weight: 800;
+  color: var(--blue);
+  margin-bottom: 10px;
+}
+.hotline-sel {
+  width: 100%;
+  padding: 12px 40px 12px 12px;
+  border: 2px solid var(--blue);
+  border-radius: 9px;
+  font-size: 15px;
+  background: white;
+  color: var(--text);
+  -webkit-appearance: none;
+  appearance: none;
+  outline: none;
+  font-family: inherit;
+  font-weight: 600;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='18' height='18' viewBox='0 0 24 24' fill='none' stroke='%232471A3' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+}
+
+/* ===== PROTOCOL ===== */
+.protocol {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+.p-step {
+  border-radius: 12px;
+  padding: 12px 8px;
+  text-align: center;
+}
+.p-step.p1 { background: #EAFAF1; border: 2px solid #1E8449; }
+.p-step.p2 { background: #FEF9E7; border: 2px solid #E67E22; }
+.p-step.p3 { background: #EBF5FB; border: 2px solid #2471A3; }
+
+.p-num {
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  margin-bottom: 4px;
+}
+.p1 .p-num { color: #1E8449; }
+.p2 .p-num { color: #E67E22; }
+.p3 .p-num { color: #2471A3; }
+
+.p-name { font-size: 13px; font-weight: 800; margin-bottom: 5px; }
+.p-body { font-size: 11px; line-height: 1.45; color: #444; }
+
+.alert-num { font-size: 26px; font-weight: 900; color: var(--red); display: block; margin: 2px 0; }
+
+/* ===== CONSCIOUSNESS BOX ===== */
+.cons-box {
+  border: 1.5px solid var(--border);
+  border-radius: 12px;
+  padding: 14px;
+  margin-bottom: 14px;
+}
+.cons-title {
+  font-size: 10px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--gray);
+  margin-bottom: 11px;
+}
+.cons-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 9px 10px;
+  border-radius: 9px;
+  margin-bottom: 7px;
+  font-size: 13px;
+  line-height: 1.4;
+}
+.cons-row:last-child { margin-bottom: 0; }
+.cons-row.c-ok  { background: #EAFAF1; }
+.cons-row.c-un  { background: #FEF5E7; }
+.cons-row.c-no  { background: #FDEDEC; }
+.cons-dot {
+  width: 10px; height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  margin-top: 3px;
+}
+.c-ok .cons-dot  { background: #1E8449; }
+.c-un .cons-dot  { background: #E67E22; }
+.c-no .cons-dot  { background: var(--red); }
+
+/* ===== FOOTER DATETIME ===== */
+.print-footer {
+  text-align: center;
+  color: var(--gray);
+  font-size: 11px;
+  margin-bottom: 10px;
+}
+
+/* ===== INFO NOTE ===== */
+.info-note {
+  background: #EBF5FB;
+  border-left: 4px solid var(--blue);
+  border-radius: 0 10px 10px 0;
+  padding: 12px 14px;
+  font-size: 14px;
+  line-height: 1.5;
+  margin-bottom: 16px;
+  color: #1A5276;
+}
+
+/* ===== PRINT ===== */
+@media print {
+  body { background: white; overflow: visible; }
+  .app { height: auto; max-width: 100%; box-shadow: none; }
+  .footer, .header { display: none !important; }
+  .content { overflow: visible; height: auto; padding: 0; }
+  .screen { display: none !important; }
+  .screen.active { display: block !important; }
+  .rf-badge {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+    animation: none !important;
+  }
+  .p-step { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+}
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- HEADER -->
+  <div class="header">
+    <div class="header-brand">
+      <div class="header-ors">ors</div>
+      <div class="header-sub">Medic-Help</div>
+    </div>
+    <div class="header-tag">RED FLAGS</div>
+    <div class="step-dots" id="stepDots">
+      <div class="dot active" id="dot0"></div>
+      <div class="dot" id="dot1"></div>
+      <div class="dot" id="dot2"></div>
+      <div class="dot" id="dot3"></div>
+      <div class="dot" id="dot4"></div>
+      <div class="dot" id="dot5"></div>
+    </div>
+  </div>
+
+  <!-- CONTENT -->
+  <div class="content" id="mainContent">
+
+    <!-- SCREEN 0 — Patient Info -->
+    <div class="screen active" id="screen0">
+      <div class="page-title">🏥 Informations Patient</div>
+
+      <div class="form-group">
+        <label class="form-label">Centre <span class="req">*</span></label>
+        <input type="text" id="f_centre" class="form-input" placeholder="Nom du centre" autocomplete="off" autocorrect="off" spellcheck="false">
+        <div class="err-msg" id="e_centre">Ce champ est obligatoire</div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Bâtiment <span class="req">*</span></label>
+        <input type="text" id="f_batiment" class="form-input" placeholder="Numéro / nom du bâtiment" autocomplete="off" autocorrect="off" spellcheck="false">
+        <div class="err-msg" id="e_batiment">Ce champ est obligatoire</div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Heure <span class="req">*</span></label>
+        <input type="time" id="f_heure" class="form-input">
+        <div class="err-msg" id="e_heure">Ce champ est obligatoire</div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">RA <span class="req">*</span></label>
+        <input type="text" id="f_ra" class="form-input" placeholder="Numéro RA" autocomplete="off" autocorrect="off" spellcheck="false" inputmode="text">
+        <div class="err-msg" id="e_ra">Ce champ est obligatoire</div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Date de naissance <span class="req">*</span></label>
+        <input type="date" id="f_ddn" class="form-input">
+        <div class="err-msg" id="e_ddn">Ce champ est obligatoire</div>
+      </div>
+    </div>
+
+    <!-- SCREEN 1 — Card Selection -->
+    <div class="screen" id="screen1">
+      <div class="page-title">🩺 Type de douleur</div>
+      <div class="card-grid">
+        <div class="card-btn" id="cb_abdominales" onclick="selectCard('abdominales')">
+          <span class="card-icon">🤢</span>
+          Douleurs<br>Abdominales
+        </div>
+        <div class="card-btn" id="cb_thoraciques" onclick="selectCard('thoraciques')">
+          <span class="card-icon">🫀</span>
+          Douleurs<br>Thoraciques
+        </div>
+        <div class="card-btn" id="cb_neurologiques" onclick="selectCard('neurologiques')">
+          <span class="card-icon">🧠</span>
+          Troubles<br>Neurologiques
+        </div>
+        <div class="card-btn" id="cb_brulures" onclick="selectCard('brulures')">
+          <span class="card-icon">🔥</span>
+          Brûlures
+        </div>
+        <div class="card-btn" id="cb_plaies" onclick="selectCard('plaies')">
+          <span class="card-icon">🩹</span>
+          Plaies &amp;<br>Traumatismes
+        </div>
+        <div class="card-btn" id="cb_respiratoires" onclick="selectCard('respiratoires')">
+          <span class="card-icon">🫁</span>
+          Problèmes<br>Respiratoires
+        </div>
+      </div>
+    </div>
+
+    <!-- SCREEN 2 — Definition -->
+    <div class="screen" id="screen2">
+      <div class="page-title" id="s2_title">Définition</div>
+      <div class="def-box" id="s2_def"></div>
+      <div class="rf-warning">
+        <div>Si la personne présente <span class="cond" id="s2_cond"></span></div>
+        <div style="margin-top:8px; font-weight:700">ET</div>
+        <div class="trigger">⚠️ 1 ou plusieurs symptôme(s) suivants → RED FLAG</div>
+      </div>
+    </div>
+
+    <!-- SCREEN 3 — Symptoms -->
+    <div class="screen" id="screen3">
+      <div class="page-title">⚠️ Symptômes</div>
+      <div id="symList"></div>
+      <div class="appel-box">Autres symptômes ? → <strong>Appel au médecin de garde</strong></div>
+    </div>
+
+    <!-- SCREEN 4 — Signes vitaux -->
+    <div class="screen" id="screen4">
+      <div class="etape-pill">Étape 4</div>
+      <div class="page-title">📊 Signes Vitaux</div>
+      <div class="info-note">Enregistrez les signes vitaux du patient. Ces champs sont facultatifs.</div>
+      <div class="vitals-grid">
+        <div class="vital-card">
+          <div class="vital-lbl">Tension artérielle</div>
+          <input type="text" id="v_ta" class="vital-inp" placeholder="___/___  mmHg" inputmode="decimal">
+        </div>
+        <div class="vital-card">
+          <div class="vital-lbl">Fréquence cardiaque</div>
+          <input type="number" id="v_fc" class="vital-inp" placeholder="___  bpm" inputmode="numeric" min="0" max="300">
+        </div>
+        <div class="vital-card">
+          <div class="vital-lbl">Saturation O₂</div>
+          <input type="number" id="v_spo2" class="vital-inp" placeholder="___%"  inputmode="numeric" min="0" max="100">
+        </div>
+        <div class="vital-card">
+          <div class="vital-lbl">Température</div>
+          <input type="number" id="v_temp" class="vital-inp" placeholder="__°C" inputmode="decimal" step="0.1" min="30" max="45">
+        </div>
+        <div class="vital-card">
+          <div class="vital-lbl">Glycémie</div>
+          <input type="number" id="v_glyc" class="vital-inp" placeholder="___ mmol/L" inputmode="decimal" step="0.1">
+        </div>
+        <div class="vital-card">
+          <div class="vital-lbl">Douleur /10</div>
+          <input type="number" id="v_doul" class="vital-inp" placeholder="__/10" inputmode="numeric" min="0" max="10">
+        </div>
+      </div>
+    </div>
+
+    <!-- SCREEN 5 — Quoi faire -->
+    <div class="screen" id="screen5">
+      <div class="etape-pill">Étape 3</div>
+      <div class="page-title">🚑 Quoi faire ?</div>
+
+      <div class="sum-card">
+        <div class="sum-lbl">Patient</div>
+        <div class="sum-val" id="s5_patient"></div>
+      </div>
+
+      <div class="sum-card">
+        <div class="sum-lbl">Type de douleur</div>
+        <div class="sum-val" id="s5_type"></div>
+      </div>
+
+      <div class="sum-card" id="s5_vitals_wrap">
+        <div class="sum-lbl">Signes vitaux</div>
+        <div class="sum-val" id="s5_vitals"></div>
+      </div>
+
+      <div class="sum-card" id="s5_sym_wrap">
+        <div class="sum-lbl">Symptômes cochés</div>
+        <div class="sum-val" id="s5_symptoms"></div>
+      </div>
+
+      <!-- RED FLAG badge -->
+      <div class="rf-badge" id="s5_rfBadge" style="display:none">
+        <h2>🚨 RED FLAG</h2>
+        <p>PROBLÈME URGENT — Agir immédiatement</p>
+      </div>
+
+      <!-- Hotline (positioned right after RED FLAG) -->
+      <div class="hotline-wrap">
+        <div class="hotline-title">📞 Selon l'avis du Hotline :</div>
+        <select id="hotlineSel" class="hotline-sel">
+          <option value="">— Choisir une décision —</option>
+          <option value="surveiller">Surveillez-le attentivement.</option>
+          <option value="taxi">Conduisez-le à l'hôpital en taxi.</option>
+          <option value="ambulance">Conduisez-le à l'hôpital en ambulance.</option>
+        </select>
+      </div>
+
+      <!-- Protocol -->
+      <div class="protocol">
+        <div class="p-step p1">
+          <div class="p-num">1. Protéger</div>
+          <div class="p-name">PROTÉGER</div>
+          <div class="p-body" id="s5_proteger"></div>
+        </div>
+        <div class="p-step p2">
+          <div class="p-num">2. Alerter</div>
+          <div class="p-name">ALERTER</div>
+          <span class="alert-num">144</span>
+          <div class="p-body">Où? Qui? Quoi? Quand? Combien? Autres infos...</div>
+        </div>
+        <div class="p-step p3">
+          <div class="p-num">3. Secourir</div>
+          <div class="p-name">SECOURIR</div>
+          <div class="p-body" id="s5_secourir"></div>
+        </div>
+      </div>
+
+      <!-- Consciousness assessment -->
+      <div class="cons-box">
+        <div class="cons-title">Évaluation de la conscience</div>
+        <div class="cons-row c-ok">
+          <div class="cons-dot"></div>
+          <div><strong>Personne consciente</strong> → Surveillance continue → Arrivée ambulance + F2</div>
+        </div>
+        <div class="cons-row c-un">
+          <div class="cons-dot"></div>
+          <div><strong>Personne inconsciente — Respire</strong> → PLS · Surveiller respiration → Arrivée ambulance + F2</div>
+        </div>
+        <div class="cons-row c-no">
+          <div class="cons-dot"></div>
+          <div><strong>Ne respire plus</strong> → Algorythme BLS-AED → Arrivée ambulance + F2</div>
+        </div>
+      </div>
+
+      <div class="print-footer" id="s5_datetime"></div>
+    </div>
+
+  </div><!-- /content -->
+
+  <!-- FOOTER BUTTONS -->
+  <div class="footer">
+    <button class="btn btn-back"    id="btnBack"  onclick="goBack()"      style="display:none">← Retour</button>
+    <button class="btn btn-primary" id="btnNext"  onclick="goNext()">Suivant →</button>
+    <button class="btn btn-print"   id="btnPrint" onclick="doPrint()"     style="display:none">🖨️ Imprimer</button>
+    <button class="btn btn-new"     id="btnNew"   onclick="newPatient()"  style="display:none">🔄 Nouveau</button>
+  </div>
+
+</div><!-- /app -->
+
+<script>
+/* ==================== DATA ==================== */
+var CARDS = {
+  abdominales: {
+    title: 'DOULEURS ABDOMINALES',
+    cond: 'une douleur abdominale',
+    def: 'Communément appelées « maux de ventre », ce sont des sensations anormales et pénibles au niveau de l\'abdomen. Elles peuvent être localisées, se déplacer ou être généralisées. Elles sont de différents types (crampes, brûlures, torsion, « en coup de poignard ») et ont différentes origines (maladies infectieuses, chroniques, problèmes digestifs, traumatismes). Leur gravité va du problème bénin à l\'urgence vitale en fonction des symptômes présents.',
+    symptoms: [
+      'Fièvre ≥ 38.5°C',
+      'Perte de connaissance',
+      'Vomissements incontrôlables',
+      'Âge < 3 ans ou > 60 ans',
+      'Diabète connu',
+      'Abdomen dur',
+      'Grossesse et/ou saignement vaginal inhabituel',
+      'Sang frais abondant dans les selles et/ou vomi',
+      'Position pliée et/ou difficulté à tendre les jambes',
+      'Plaie profonde et/ou hématome étendu',
+      'Opération abdominale récente'
+    ],
+    proteger: 'Rassurer\nMettre au repos',
+    secourir: 'Prise des signes vitaux\nSurveiller conscience\nSurveiller respiration\nGarder à jeûn'
+  },
+  thoraciques: {
+    title: 'DOULEURS THORACIQUES',
+    cond: 'une douleur thoracique',
+    def: 'La douleur thoracique est une sensation anormale et pénible au niveau du thorax. Elle peut être localisée ou étendue, elle peut irradier (se déplacer) ou non. Elle peut avoir différentes origines (tabagisme, angoisse, traumatisme, problème de cœur) et sa gravité peut aller du problème bénin à l\'urgence vitale en fonction des symptômes présents.',
+    symptoms: [
+      'Sueurs / Pâleur',
+      'Diabète connu',
+      'Grossesse',
+      'Âge > 60 ans',
+      'Main sur la poitrine',
+      'Perte de connaissance',
+      'Consommation connue de cocaïne'
+    ],
+    proteger: 'Rassurer\nMettre au repos',
+    secourir: 'Prise des signes vitaux\nSurveiller conscience\nSurveiller respiration'
+  },
+  neurologiques: {
+    title: 'TROUBLES NEUROLOGIQUES',
+    cond: 'un trouble neurologique',
+    def: 'Ce sont des dysfonctionnements du système nerveux. Ils peuvent avoir différentes origines (maladies infectieuses chroniques génétiques, traumatisme physique ou psychique, prise de produits, manque d\'oxygène) et se manifestent par des symptômes qui peuvent affecter les 5 sens, la cognition (langage, compréhension, mémoire, orientation), la motricité et/ou la sensitivité.',
+    symptoms: [
+      'Grossesse',
+      'Diabète connu',
+      'Convulsions',
+      'Menaces suicidaires',
+      'Âge < 3 ans ou > 60 ans',
+      'Paralysie d\'un côté du corps',
+      'Réduction soudaine du champ visuel',
+      'Visage inhabituel et asymétrique / coin des lèvres pendant',
+      'Difficulté / impossibilité à s\'exprimer clairement',
+      'Hallucinations visuelles et/ou auditives',
+      'Perte de conscience / trouble de la conscience',
+      'Traumatisme crânien AVEC perte de connaissance'
+    ],
+    proteger: 'Rassurer\nMettre au repos',
+    secourir: 'Prise des signes vitaux\nSurveiller conscience\nSurveiller respiration\nGarder à jeûn'
+  },
+  brulures: {
+    title: 'BRÛLURES',
+    cond: 'une brûlure',
+    def: 'La brûlure est une destruction des tissus biologiques (peau, muqueuses, muscles, organes, phanères, os) par une source thermique, chimique, électrique, mécanique ou radiologique. On évalue la gravité d\'une brûlure selon 3 critères : la localisation de la brûlure, l\'étendue et le degré (1er, 2ème ou 3ème degré).',
+    symptoms: [
+      'Brûlure à la / aux main(s)',
+      'Brûlure au(x) pied(s)',
+      'Brûlure génitale',
+      'Électrocution',
+      'Brûlure à l\'œil / aux yeux',
+      'Perte de connaissance',
+      'Brûlure au visage',
+      'Surface brûlée > surface de la main ouverte de la victime',
+      'Brûlure circulaire (fait le tour complet d\'une partie du corps)',
+      'Brûlure due à une explosion',
+      'Brûlure des voies aériennes (muqueuses du nez, bouche)',
+      'Structures profondes visibles (graisse, muscle, os)',
+      'Engelure (brûlure due au froid)'
+    ],
+    proteger: 'Éliminer la source de la brûlure\nRassurer\nMettre au repos',
+    secourir: 'Rincer la zone brûlée à l\'eau froide min. 10 minutes\nPrise des signes vitaux\nSurveiller conscience\nSurveiller respiration'
+  },
+  plaies: {
+    title: 'PLAIES & TRAUMATISMES, SAIGNEMENTS',
+    cond: 'une plaie, un traumatisme et/ou un saignement',
+    def: 'Une plaie est une blessure superficielle (lésion de la peau) ou profonde (lésion de la peau ET des tissus mous sous-jacents). Elle peut avoir différentes origines (traumatique, infectieuse ou chirurgicale). La gravité d\'une plaie dépend de son emplacement, sa profondeur, des saignements qui en proviennent et du contexte d\'apparition (accident, violence, chirurgie, etc.).',
+    symptoms: [
+      'Saignement abondant',
+      'Saignement pulsatile',
+      'Plaie profonde',
+      'Plaie par balle',
+      'Perte de connaissance',
+      'Déformation d\'un membre visible à l\'œil nu',
+      'Déformation visible sur trauma au nez, visage, bouche ou gorge',
+      'Structures profondes visibles (graisse, muscle, os)',
+      'Objet blessant toujours dans la plaie (ne jamais retirer !)',
+      'Perte totale de mobilité et/ou de sensibilité d\'un membre'
+    ],
+    proteger: 'Stopper le saignement par compression\nRassurer\nMettre au repos',
+    secourir: 'Surveiller l\'arrêt du saignement\nPrise des signes vitaux\nSurveiller conscience\nSurveiller respiration'
+  },
+  respiratoires: {
+    title: 'PROBLÈMES RESPIRATOIRES',
+    cond: 'un problème respiratoire',
+    def: 'Ce terme englobe la totalité des atteintes possibles du système respiratoire. Ils peuvent avoir des origines multiples (maladie, traumatisme physique ou psychique, corps étranger) et peuvent devenir très rapidement des urgences vitales notamment lors d\'obstruction (partielle ou complète) des voies aériennes par un corps étranger.',
+    symptoms: [
+      'Âge < 3 ans ou > 60 ans',
+      'Perte de connaissance',
+      'Changement de voix',
+      'Crachats sanglants',
+      'Grossesse',
+      'Mains autour du cou',
+      'Difficulté à finir ses phrases',
+      'Lèvres bleues / visage très rouge, bleu, violet',
+      'Agitation / désorientation / somnolence',
+      'Bouche grande ouverte sans son qui en sort'
+    ],
+    proteger: 'Rassurer\nMettre au repos',
+    secourir: 'Obstruction partielle? → Faire tousser\nObstruction complète?\n• Âge < 1 an : MOFENSON\n• Âge > 1 an : HEIMLICH\nPrise des signes vitaux\nSurveiller conscience\nSurveiller respiration\nGarder à jeûn'
+  }
+};
+
+/* ==================== STATE ==================== */
+var currentScreen = 0;
+var selectedCard  = null;
+var checkedSyms   = [];
+
+/* ==================== NAVIGATION ==================== */
+function showScreen(n) {
+  var screens = document.querySelectorAll('.screen');
+  for (var i = 0; i < screens.length; i++) screens[i].classList.remove('active');
+  document.getElementById('screen' + n).classList.add('active');
+  document.getElementById('mainContent').scrollTop = 0;
+  currentScreen = n;
+  updateDots();
+  updateButtons();
+}
+
+function updateDots() {
+  for (var i = 0; i < 6; i++) {
+    var d = document.getElementById('dot' + i);
+    d.className = 'dot' + (i === currentScreen ? ' active' : '');
+  }
+}
+
+function updateButtons() {
+  var btnBack  = document.getElementById('btnBack');
+  var btnNext  = document.getElementById('btnNext');
+  var btnPrint = document.getElementById('btnPrint');
+  var btnNew   = document.getElementById('btnNew');
+
+  btnBack.style.display  = currentScreen > 0 ? 'inline-flex' : 'none';
+  btnNext.style.display  = (currentScreen > 0 && currentScreen < 5) ? 'inline-flex' : 'none';
+  btnPrint.style.display = currentScreen === 5 ? 'inline-flex' : 'none';
+  btnNew.style.display   = currentScreen === 5 ? 'inline-flex' : 'none';
+
+  /* Screen 0: show only Next */
+  if (currentScreen === 0) {
+    btnBack.style.display = 'none';
+    btnNext.style.display = 'inline-flex';
+  }
+  /* Screen 1: card click navigates, no Next button */
+  if (currentScreen === 1) {
+    btnNext.style.display = 'none';
+  }
+}
+
+function goNext() {
+  if (currentScreen === 0) {
+    if (!validatePage0()) return;
+    showScreen(1);
+  } else if (currentScreen === 2) {
+    buildSymptoms();
+    showScreen(3);
+  } else if (currentScreen === 3) {
+    showScreen(4);
+  } else if (currentScreen === 4) {
+    buildSummary();
+    showScreen(5);
+  }
+}
+
+function goBack() {
+  if (currentScreen === 1) showScreen(0);
+  else if (currentScreen === 2) showScreen(1);
+  else if (currentScreen === 3) showScreen(2);
+  else if (currentScreen === 4) showScreen(3);
+  else if (currentScreen === 5) showScreen(4);
+}
+
+/* ==================== VALIDATION ==================== */
+function validatePage0() {
+  var fields = ['centre','batiment','heure','ra','ddn'];
+  var ok = true;
+  for (var i = 0; i < fields.length; i++) {
+    var f = fields[i];
+    var inp = document.getElementById('f_' + f);
+    var err = document.getElementById('e_' + f);
+    if (!inp.value.trim()) {
+      inp.classList.add('error');
+      err.classList.add('show');
+      ok = false;
+    } else {
+      inp.classList.remove('error');
+      err.classList.remove('show');
+    }
+  }
+  return ok;
+}
+
+/* Clear errors on input */
+(function() {
+  var fields = ['centre','batiment','heure','ra','ddn'];
+  for (var i = 0; i < fields.length; i++) {
+    (function(f) {
+      document.getElementById('f_' + f).addEventListener('input', function() {
+        this.classList.remove('error');
+        document.getElementById('e_' + f).classList.remove('show');
+      });
+    })(fields[i]);
+  }
+})();
+
+/* ==================== CARD SELECTION ==================== */
+function selectCard(key) {
+  selectedCard = key;
+  checkedSyms  = [];
+
+  var card = CARDS[key];
+  document.getElementById('s2_title').textContent = card.title;
+  document.getElementById('s2_def').textContent   = card.def;
+  document.getElementById('s2_cond').textContent  = card.cond;
+
+  showScreen(2);
+}
+
+/* ==================== SYMPTOMS ==================== */
+function buildSymptoms() {
+  var card = CARDS[selectedCard];
+  var list = document.getElementById('symList');
+  list.innerHTML = '';
+  checkedSyms = [];
+
+  for (var i = 0; i < card.symptoms.length; i++) {
+    (function(idx, sym) {
+      var div = document.createElement('div');
+      div.className = 'sym-item';
+      div.innerHTML =
+        '<div class="sym-cb"><span class="sym-cb-icon">✓</span></div>' +
+        '<div class="sym-text">⚠️ ' + sym + '</div>';
+      div.onclick = function() { toggleSym(div, sym); };
+      list.appendChild(div);
+    })(i, card.symptoms[i]);
+  }
+}
+
+function toggleSym(el, sym) {
+  el.classList.toggle('checked');
+  if (el.classList.contains('checked')) {
+    if (checkedSyms.indexOf(sym) === -1) checkedSyms.push(sym);
+  } else {
+    checkedSyms = checkedSyms.filter(function(s) { return s !== sym; });
+  }
+}
+
+/* ==================== SUMMARY ==================== */
+function buildSummary() {
+  var card    = CARDS[selectedCard];
+  var centre  = document.getElementById('f_centre').value.trim();
+  var batiment= document.getElementById('f_batiment').value.trim();
+  var heure   = document.getElementById('f_heure').value.trim();
+  var ra      = document.getElementById('f_ra').value.trim();
+  var ddn     = document.getElementById('f_ddn').value.trim();
+
+  var ddnFmt = ddn;
+  if (ddn) {
+    var parts = ddn.split('-');
+    if (parts.length === 3) ddnFmt = parts[2] + '.' + parts[1] + '.' + parts[0];
+  }
+
+  document.getElementById('s5_patient').innerHTML =
+    '<strong>RA :</strong> ' + ra + '<br>' +
+    '<strong>DDN :</strong> ' + ddnFmt + '<br>' +
+    '<strong>Centre :</strong> ' + centre + ' &nbsp;|&nbsp; <strong>Bât. :</strong> ' + batiment + '<br>' +
+    '<strong>Heure :</strong> ' + heure;
+
+  document.getElementById('s5_type').textContent = card.title;
+
+  /* Vitals */
+  var ta   = document.getElementById('v_ta').value.trim();
+  var fc   = document.getElementById('v_fc').value.trim();
+  var spo2 = document.getElementById('v_spo2').value.trim();
+  var temp = document.getElementById('v_temp').value.trim();
+  var glyc = document.getElementById('v_glyc').value.trim();
+  var doul = document.getElementById('v_doul').value.trim();
+
+  var vitParts = [];
+  if (ta)   vitParts.push('T.A. : ' + ta + ' mmHg');
+  if (fc)   vitParts.push('F.C. : ' + fc + ' bpm');
+  if (spo2) vitParts.push('SpO₂ : ' + spo2 + '%');
+  if (temp) vitParts.push('Temp : ' + temp + '°C');
+  if (glyc) vitParts.push('Glycémie : ' + glyc + ' mmol/L');
+  if (doul) vitParts.push('Douleur : ' + doul + '/10');
+
+  document.getElementById('s5_vitals').innerHTML = vitParts.length ? vitParts.join('<br>') : '—';
+
+  /* Symptoms */
+  if (checkedSyms.length > 0) {
+    document.getElementById('s5_symptoms').innerHTML = checkedSyms.map(function(s) { return '⚠️ ' + s; }).join('<br>');
+    document.getElementById('s5_rfBadge').style.display = 'block';
+  } else {
+    document.getElementById('s5_symptoms').textContent = 'Aucun symptôme coché';
+    document.getElementById('s5_rfBadge').style.display = 'none';
+  }
+
+  /* Protocol */
+  document.getElementById('s5_proteger').innerHTML = card.proteger.replace(/\n/g, '<br>');
+  document.getElementById('s5_secourir').innerHTML = card.secourir.replace(/\n/g, '<br>');
+
+  /* Reset hotline */
+  document.getElementById('hotlineSel').value = '';
+
+  /* Timestamp */
+  var now = new Date();
+  var d = now.getDate();
+  var m = now.getMonth() + 1;
+  var y = now.getFullYear();
+  var hh = String(now.getHours()).padStart(2,'0');
+  var mm = String(now.getMinutes()).padStart(2,'0');
+  document.getElementById('s5_datetime').textContent =
+    'Enregistré le ' + (d < 10 ? '0'+d : d) + '.' + (m < 10 ? '0'+m : m) + '.' + y + ' à ' + hh + ':' + mm;
+}
+
+/* ==================== PRINT ==================== */
+function doPrint() {
+  var card    = CARDS[selectedCard];
+  var centre  = document.getElementById('f_centre').value.trim();
+  var batiment= document.getElementById('f_batiment').value.trim();
+  var heure   = document.getElementById('f_heure').value.trim();
+  var ra      = document.getElementById('f_ra').value.trim();
+  var ddn     = document.getElementById('f_ddn').value.trim();
+
+  var ddnFmt = ddn;
+  if (ddn) { var p = ddn.split('-'); if (p.length===3) ddnFmt = p[2]+'.'+p[1]+'.'+p[0]; }
+
+  var ta   = document.getElementById('v_ta').value.trim();
+  var fc   = document.getElementById('v_fc').value.trim();
+  var spo2 = document.getElementById('v_spo2').value.trim();
+  var temp = document.getElementById('v_temp').value.trim();
+  var glyc = document.getElementById('v_glyc').value.trim();
+  var doul = document.getElementById('v_doul').value.trim();
+
+  var sel = document.getElementById('hotlineSel');
+  var hotlineVal = sel.value;
+  var hotlineTxt = sel.options[sel.selectedIndex].text;
+  var hotlineClr = hotlineVal === 'ambulance' ? '#C0392B' : hotlineVal === 'taxi' ? '#E67E22' : '#1E8449';
+
+  var hasRF = checkedSyms.length > 0;
+
+  var now = new Date();
+  var dateStr = (now.getDate()<10?'0':'')+now.getDate()+'.'+(now.getMonth()<9?'0':'')+(now.getMonth()+1)+'.'+now.getFullYear();
+  var timeStr = String(now.getHours()).padStart(2,'0')+':'+String(now.getMinutes()).padStart(2,'0');
+
+  var vitRows = [];
+  if (ta)   vitRows.push(['Tension artérielle', ta + ' mmHg']);
+  if (fc)   vitRows.push(['Fréquence cardiaque', fc + ' bpm']);
+  if (spo2) vitRows.push(['Saturation O₂', spo2 + '%']);
+  if (temp) vitRows.push(['Température', temp + '°C']);
+  if (glyc) vitRows.push(['Glycémie', glyc + ' mmol/L']);
+  if (doul) vitRows.push(['Douleur', doul + '/10']);
+
+  var vitHTML = '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px">';
+  for (var i = 0; i < vitRows.length; i++) {
+    vitHTML += '<div style="background:#F4F6F7;border-radius:8px;padding:9px;border:1px solid #D5D8DC">' +
+      '<div style="font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:0.5px;color:#626567;margin-bottom:3px">'+vitRows[i][0]+'</div>' +
+      '<div style="font-size:14px;font-weight:700">'+vitRows[i][1]+'</div></div>';
+  }
+  vitHTML += '</div>';
+
+  var symHTML = '';
+  if (hasRF) {
+    for (var j = 0; j < checkedSyms.length; j++) {
+      symHTML += '<div style="padding:7px 0;border-bottom:1px solid #EEE;font-size:14px">⚠️ ' + checkedSyms[j] + '</div>';
+    }
+  }
+
+  var hotlineHTML = hotlineVal ?
+    '<div style="border:2.5px solid '+hotlineClr+';border-radius:10px;padding:13px;margin:14px 0;background:#F8FAFB">' +
+    '<div style="font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:1px;color:'+hotlineClr+';margin-bottom:5px">📞 Selon l\'avis du Hotline</div>' +
+    '<div style="font-size:16px;font-weight:800;color:'+hotlineClr+'">'+hotlineTxt+'</div></div>'
+    : '';
+
+  var html = '<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8">' +
+    '<meta name="viewport" content="width=device-width,initial-scale=1">' +
+    '<title>RED FLAGS — '+ra+'</title>' +
+    '<style>*{box-sizing:border-box;margin:0;padding:0}body{font-family:Arial,sans-serif;font-size:14px;color:#1C2833;padding:18px;background:white}' +
+    'h1{font-size:20px;color:#C0392B;border-bottom:3px solid #C0392B;padding-bottom:8px;margin-bottom:14px}' +
+    'h2{font-size:14px;color:#2471A3;font-weight:800;text-transform:uppercase;letter-spacing:1px;margin:14px 0 7px}' +
+    '.rf{background:#C0392B;color:white;padding:15px;border-radius:12px;text-align:center;margin:14px 0;-webkit-print-color-adjust:exact;print-color-adjust:exact}' +
+    '.rf h2{color:white;font-size:20px;letter-spacing:3px;margin:0 0 4px;border:none}' +
+    '.proto{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin:12px 0}' +
+    '.p1{background:#EAFAF1;border:2px solid #1E8449;border-radius:10px;padding:11px;-webkit-print-color-adjust:exact;print-color-adjust:exact}' +
+    '.p2{background:#FEF9E7;border:2px solid #E67E22;border-radius:10px;padding:11px;-webkit-print-color-adjust:exact;print-color-adjust:exact}' +
+    '.p3{background:#EBF5FB;border:2px solid #2471A3;border-radius:10px;padding:11px;-webkit-print-color-adjust:exact;print-color-adjust:exact}' +
+    '.pn{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px}' +
+    '.p1 .pn{color:#1E8449}.p2 .pn{color:#E67E22}.p3 .pn{color:#2471A3}' +
+    '.pt{font-size:13px;font-weight:800;margin-bottom:5px}.pb{font-size:11px;line-height:1.45;color:#444}' +
+    '.anum{font-size:24px;font-weight:900;color:#C0392B;display:block;margin:2px 0}' +
+    'footer{margin-top:18px;font-size:11px;color:#999;text-align:center;border-top:1px solid #EEE;padding-top:10px}' +
+    '@media print{body{padding:8px}}</style></head><body>' +
+    '<h1>🚨 RED FLAGS — ' + card.title + '</h1>' +
+
+    '<h2>Informations Patient</h2>' +
+    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px">' +
+    '<div style="background:#F4F6F7;border-radius:8px;padding:9px;border:1px solid #D5D8DC"><div style="font-size:10px;font-weight:800;text-transform:uppercase;color:#626567;margin-bottom:3px">RA</div><div style="font-size:14px;font-weight:700">'+ra+'</div></div>' +
+    '<div style="background:#F4F6F7;border-radius:8px;padding:9px;border:1px solid #D5D8DC"><div style="font-size:10px;font-weight:800;text-transform:uppercase;color:#626567;margin-bottom:3px">Date de naissance</div><div style="font-size:14px;font-weight:700">'+ddnFmt+'</div></div>' +
+    '<div style="background:#F4F6F7;border-radius:8px;padding:9px;border:1px solid #D5D8DC"><div style="font-size:10px;font-weight:800;text-transform:uppercase;color:#626567;margin-bottom:3px">Centre</div><div style="font-size:14px;font-weight:700">'+centre+'</div></div>' +
+    '<div style="background:#F4F6F7;border-radius:8px;padding:9px;border:1px solid #D5D8DC"><div style="font-size:10px;font-weight:800;text-transform:uppercase;color:#626567;margin-bottom:3px">Bâtiment</div><div style="font-size:14px;font-weight:700">'+batiment+'</div></div>' +
+    '<div style="background:#F4F6F7;border-radius:8px;padding:9px;border:1px solid #D5D8DC"><div style="font-size:10px;font-weight:800;text-transform:uppercase;color:#626567;margin-bottom:3px">Heure</div><div style="font-size:14px;font-weight:700">'+heure+'</div></div>' +
+    '<div style="background:#F4F6F7;border-radius:8px;padding:9px;border:1px solid #D5D8DC"><div style="font-size:10px;font-weight:800;text-transform:uppercase;color:#626567;margin-bottom:3px">Date</div><div style="font-size:14px;font-weight:700">'+dateStr+'</div></div>' +
+    '</div>' +
+
+    (vitRows.length ? '<h2>Signes Vitaux</h2>' + vitHTML : '') +
+
+    (hasRF ?
+      '<div class="rf"><h2>🚨 RED FLAG — PROBLÈME URGENT</h2><p style="font-size:13px;opacity:.9">Symptômes détectés :</p></div>' + symHTML
+      : '<div style="color:#1E8449;font-weight:700;font-size:15px;margin:10px 0;padding:12px;background:#EAFAF1;border-radius:10px">✅ Aucun Red Flag détecté</div>') +
+
+    hotlineHTML +
+
+    '<h2>Protocole d\'intervention</h2>' +
+    '<div class="proto">' +
+    '<div class="p1"><div class="pn">1. Protéger</div><div class="pt">PROTÉGER</div><div class="pb">'+card.proteger.replace(/\n/g,'<br>')+'</div></div>' +
+    '<div class="p2"><div class="pn">2. Alerter</div><div class="pt">ALERTER</div><span class="anum">144</span><div class="pb">Où? Qui? Quoi? Quand? Combien?</div></div>' +
+    '<div class="p3"><div class="pn">3. Secourir</div><div class="pt">SECOURIR</div><div class="pb">'+card.secourir.replace(/\n/g,'<br>')+'</div></div>' +
+    '</div>' +
+
+    '<footer>RED FLAGS — ORS Medic-Help · Enregistré le ' + dateStr + ' à ' + timeStr + ' · Dernière version validée : 18.07.2024</footer>' +
+    '<script>window.addEventListener("load",function(){setTimeout(function(){window.print();},300);});<\/script>' +
+    '</body></html>';
+
+  var win = window.open('', '_blank');
+  if (win) {
+    win.document.open();
+    win.document.write(html);
+    win.document.close();
+  } else {
+    /* Fallback if popup blocked */
+    window.print();
+  }
+}
+
+/* ==================== NEW PATIENT ==================== */
+function newPatient() {
+  var fields = ['centre','batiment','heure','ra','ddn'];
+  for (var i = 0; i < fields.length; i++) {
+    var inp = document.getElementById('f_' + fields[i]);
+    inp.value = '';
+    inp.classList.remove('error');
+    document.getElementById('e_' + fields[i]).classList.remove('show');
+  }
+  var vitals = ['ta','fc','spo2','temp','glyc','doul'];
+  for (var j = 0; j < vitals.length; j++) {
+    document.getElementById('v_' + vitals[j]).value = '';
+  }
+  document.getElementById('hotlineSel').value = '';
+  selectedCard = null;
+  checkedSyms  = [];
+  showScreen(0);
+}
+</script>
+</body>
+</html>
