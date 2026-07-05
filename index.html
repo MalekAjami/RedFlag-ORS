@@ -349,6 +349,28 @@ body {
   transition: border-color 0.2s;
 }
 .vital-inp:focus { border-color: var(--blue); }
+.bp-row {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+.bp-part {
+  text-align: center;
+  padding-left: 6px;
+  padding-right: 6px;
+}
+.bp-sep {
+  font-size: 22px;
+  font-weight: 900;
+  color: var(--gray);
+  line-height: 1;
+}
+.bp-unit {
+  font-size: 11px;
+  font-weight: 800;
+  color: var(--gray);
+  white-space: nowrap;
+}
 
 /* ===== RED FLAG BADGE ===== */
 @keyframes rfPulse {
@@ -417,6 +439,32 @@ body {
   background-repeat: no-repeat;
   background-position: right 12px center;
 }
+.med-field { margin-top: 12px; }
+.med-label {
+  font-size: 12px;
+  font-weight: 800;
+  color: var(--blue);
+  margin-bottom: 7px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.med-textarea {
+  width: 100%;
+  min-height: 88px;
+  padding: 11px 12px;
+  border: 2px solid var(--blue);
+  border-radius: 9px;
+  font-size: 15px;
+  background: white;
+  color: var(--text);
+  outline: none;
+  resize: vertical;
+  font-family: inherit;
+  line-height: 1.4;
+  -webkit-appearance: none;
+  appearance: none;
+}
+.med-textarea:focus { border-color: var(--red); }
 
 /* ===== PROTOCOL ===== */
 .protocol {
@@ -641,7 +689,12 @@ body {
       <div class="vitals-grid">
         <div class="vital-card">
           <div class="vital-lbl">Tension artérielle</div>
-          <input type="text" id="v_ta" class="vital-inp" placeholder="___/___  mmHg" inputmode="decimal">
+          <div class="bp-row">
+            <input type="text" id="v_ta_sys" class="vital-inp bp-part" placeholder="120" inputmode="numeric" pattern="[0-9]*" maxlength="3" aria-label="Tension systolique">
+            <span class="bp-sep">/</span>
+            <input type="text" id="v_ta_dia" class="vital-inp bp-part" placeholder="80" inputmode="numeric" pattern="[0-9]*" maxlength="3" aria-label="Tension diastolique">
+            <span class="bp-unit">mmHg</span>
+          </div>
         </div>
         <div class="vital-card">
           <div class="vital-lbl">Fréquence cardiaque</div>
@@ -668,7 +721,7 @@ body {
 
     <!-- SCREEN 5 — Quoi faire -->
     <div class="screen" id="screen5">
-      <div class="etape-pill">Étape 3</div>
+      <div class="etape-pill">Étape 5</div>
       <div class="page-title">🚑 Quoi faire ?</div>
 
       <div class="sum-card">
@@ -694,18 +747,22 @@ body {
       <!-- RED FLAG badge -->
       <div class="rf-badge" id="s5_rfBadge" style="display:none">
         <h2>🚨 RED FLAG</h2>
-        <p>PROBLÈME URGENT — Agir immédiatement</p>
+        <p>Agissez immédiatement — appelez le 144</p>
       </div>
 
       <!-- Hotline (positioned right after RED FLAG) -->
       <div class="hotline-wrap">
-        <div class="hotline-title">📞 Selon l'avis du Hotline :</div>
+        <div class="hotline-title">📞 Selon l’avis de la hotline :</div>
         <select id="hotlineSel" class="hotline-sel">
           <option value="">— Choisir une décision —</option>
           <option value="surveiller">Surveillez-le attentivement.</option>
           <option value="taxi">Conduisez-le à l'hôpital en taxi.</option>
           <option value="ambulance">Conduisez-le à l'hôpital en ambulance.</option>
         </select>
+        <div class="med-field">
+          <div class="med-label">💊 Médicament(s) à administrer</div>
+          <textarea id="medicationNotes" class="med-textarea" placeholder="Nom du médicament, dose, voie, heure…"></textarea>
+        </div>
       </div>
 
       <!-- Protocol -->
@@ -761,6 +818,35 @@ body {
 </div><!-- /app -->
 
 <script>
+/* ==================== APP HELPERS ==================== */
+if ('serviceWorker' in navigator && window.isSecureContext) {
+  window.addEventListener('load', function() {
+    navigator.serviceWorker.register('./sw.js').catch(function() {});
+  });
+}
+
+function esc(value) {
+  return String(value == null ? '' : value)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+function nl2brEsc(value) {
+  return esc(value).replace(/\n/g, '<br>');
+}
+
+function getBloodPressure() {
+  var sys = document.getElementById('v_ta_sys').value.trim();
+  var dia = document.getElementById('v_ta_dia').value.trim();
+  if (sys && dia) return sys + '/' + dia;
+  if (sys) return sys + '/—';
+  if (dia) return '—/' + dia;
+  return '';
+}
+
 /* ==================== DATA ==================== */
 var CARDS = {
   abdominales: {
@@ -1053,15 +1139,15 @@ function buildSummary() {
   }
 
   document.getElementById('s5_patient').innerHTML =
-    '<strong>RA :</strong> ' + ra + '<br>' +
-    '<strong>DDN :</strong> ' + ddnFmt + '<br>' +
-    '<strong>Centre :</strong> ' + centre + ' &nbsp;|&nbsp; <strong>Bât. :</strong> ' + batiment + '<br>' +
-    '<strong>Heure :</strong> ' + heure;
+    '<strong>RA :</strong> ' + esc(ra) + '<br>' +
+    '<strong>DDN :</strong> ' + esc(ddnFmt) + '<br>' +
+    '<strong>Centre :</strong> ' + esc(centre) + ' &nbsp;|&nbsp; <strong>Bât. :</strong> ' + esc(batiment) + '<br>' +
+    '<strong>Heure :</strong> ' + esc(heure);
 
   document.getElementById('s5_type').textContent = card.title;
 
   /* Vitals */
-  var ta   = document.getElementById('v_ta').value.trim();
+  var ta   = getBloodPressure();
   var fc   = document.getElementById('v_fc').value.trim();
   var spo2 = document.getElementById('v_spo2').value.trim();
   var temp = document.getElementById('v_temp').value.trim();
@@ -1069,18 +1155,18 @@ function buildSummary() {
   var doul = document.getElementById('v_doul').value.trim();
 
   var vitParts = [];
-  if (ta)   vitParts.push('T.A. : ' + ta + ' mmHg');
-  if (fc)   vitParts.push('F.C. : ' + fc + ' bpm');
-  if (spo2) vitParts.push('SpO₂ : ' + spo2 + '%');
-  if (temp) vitParts.push('Temp : ' + temp + '°C');
-  if (glyc) vitParts.push('Glycémie : ' + glyc + ' mmol/L');
-  if (doul) vitParts.push('Douleur : ' + doul + '/10');
+  if (ta)   vitParts.push('T.A. : ' + esc(ta) + ' mmHg');
+  if (fc)   vitParts.push('F.C. : ' + esc(fc) + ' bpm');
+  if (spo2) vitParts.push('SpO₂ : ' + esc(spo2) + '%');
+  if (temp) vitParts.push('Temp : ' + esc(temp) + '°C');
+  if (glyc) vitParts.push('Glycémie : ' + esc(glyc) + ' mmol/L');
+  if (doul) vitParts.push('Douleur : ' + esc(doul) + '/10');
 
   document.getElementById('s5_vitals').innerHTML = vitParts.length ? vitParts.join('<br>') : '—';
 
   /* Symptoms */
   if (checkedSyms.length > 0) {
-    document.getElementById('s5_symptoms').innerHTML = checkedSyms.map(function(s) { return '⚠️ ' + s; }).join('<br>');
+    document.getElementById('s5_symptoms').innerHTML = checkedSyms.map(function(s) { return '⚠️ ' + esc(s); }).join('<br>');
     document.getElementById('s5_rfBadge').style.display = 'block';
   } else {
     document.getElementById('s5_symptoms').textContent = 'Aucun symptôme coché';
@@ -1088,8 +1174,8 @@ function buildSummary() {
   }
 
   /* Protocol */
-  document.getElementById('s5_proteger').innerHTML = card.proteger.replace(/\n/g, '<br>');
-  document.getElementById('s5_secourir').innerHTML = card.secourir.replace(/\n/g, '<br>');
+  document.getElementById('s5_proteger').innerHTML = nl2brEsc(card.proteger);
+  document.getElementById('s5_secourir').innerHTML = nl2brEsc(card.secourir);
 
   /* Reset hotline */
   document.getElementById('hotlineSel').value = '';
@@ -1117,7 +1203,7 @@ function doPrint() {
   var ddnFmt = ddn;
   if (ddn) { var p = ddn.split('-'); if (p.length===3) ddnFmt = p[2]+'.'+p[1]+'.'+p[0]; }
 
-  var ta   = document.getElementById('v_ta').value.trim();
+  var ta   = getBloodPressure();
   var fc   = document.getElementById('v_fc').value.trim();
   var spo2 = document.getElementById('v_spo2').value.trim();
   var temp = document.getElementById('v_temp').value.trim();
@@ -1128,6 +1214,7 @@ function doPrint() {
   var hotlineVal = sel.value;
   var hotlineTxt = sel.options[sel.selectedIndex].text;
   var hotlineClr = hotlineVal === 'ambulance' ? '#C0392B' : hotlineVal === 'taxi' ? '#E67E22' : '#1E8449';
+  var medicationNotes = document.getElementById('medicationNotes').value.trim();
 
   var hasRF = checkedSyms.length > 0;
 
@@ -1146,27 +1233,33 @@ function doPrint() {
   var vitHTML = '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px">';
   for (var i = 0; i < vitRows.length; i++) {
     vitHTML += '<div style="background:#F4F6F7;border-radius:8px;padding:9px;border:1px solid #D5D8DC">' +
-      '<div style="font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:0.5px;color:#626567;margin-bottom:3px">'+vitRows[i][0]+'</div>' +
-      '<div style="font-size:14px;font-weight:700">'+vitRows[i][1]+'</div></div>';
+      '<div style="font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:0.5px;color:#626567;margin-bottom:3px">'+esc(vitRows[i][0])+'</div>' +
+      '<div style="font-size:14px;font-weight:700">'+esc(vitRows[i][1])+'</div></div>';
   }
   vitHTML += '</div>';
 
   var symHTML = '';
   if (hasRF) {
     for (var j = 0; j < checkedSyms.length; j++) {
-      symHTML += '<div style="padding:7px 0;border-bottom:1px solid #EEE;font-size:14px">⚠️ ' + checkedSyms[j] + '</div>';
+      symHTML += '<div style="padding:7px 0;border-bottom:1px solid #EEE;font-size:14px">⚠️ ' + esc(checkedSyms[j]) + '</div>';
     }
   }
 
   var hotlineHTML = hotlineVal ?
     '<div style="border:2.5px solid '+hotlineClr+';border-radius:10px;padding:13px;margin:14px 0;background:#F8FAFB">' +
-    '<div style="font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:1px;color:'+hotlineClr+';margin-bottom:5px">📞 Selon l\'avis du Hotline</div>' +
-    '<div style="font-size:16px;font-weight:800;color:'+hotlineClr+'">'+hotlineTxt+'</div></div>'
+    '<div style="font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:1px;color:'+hotlineClr+';margin-bottom:5px">📞 Selon l’avis de la hotline</div>' +
+    '<div style="font-size:16px;font-weight:800;color:'+hotlineClr+'">'+esc(hotlineTxt)+'</div></div>'
+    : '';
+
+  var medicationHTML = medicationNotes ?
+    '<div style="border:2px solid #2471A3;border-radius:10px;padding:13px;margin:14px 0;background:#EBF5FB">' +
+    '<div style="font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:1px;color:#2471A3;margin-bottom:6px">💊 Médicament(s) administré(s)</div>' +
+    '<div style="font-size:14px;font-weight:700;line-height:1.45">'+nl2brEsc(medicationNotes)+'</div></div>'
     : '';
 
   var html = '<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8">' +
     '<meta name="viewport" content="width=device-width,initial-scale=1">' +
-    '<title>RED FLAGS — '+ra+'</title>' +
+    '<title>RED FLAGS — '+esc(ra)+'</title>' +
     '<style>*{box-sizing:border-box;margin:0;padding:0}body{font-family:Arial,sans-serif;font-size:14px;color:#1C2833;padding:18px;background:white}' +
     'h1{font-size:20px;color:#C0392B;border-bottom:3px solid #C0392B;padding-bottom:8px;margin-bottom:14px}' +
     'h2{font-size:14px;color:#2471A3;font-weight:800;text-transform:uppercase;letter-spacing:1px;margin:14px 0 7px}' +
@@ -1186,28 +1279,22 @@ function doPrint() {
 
     '<h2>Informations Patient</h2>' +
     '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px">' +
-    '<div style="background:#F4F6F7;border-radius:8px;padding:9px;border:1px solid #D5D8DC"><div style="font-size:10px;font-weight:800;text-transform:uppercase;color:#626567;margin-bottom:3px">RA</div><div style="font-size:14px;font-weight:700">'+ra+'</div></div>' +
-    '<div style="background:#F4F6F7;border-radius:8px;padding:9px;border:1px solid #D5D8DC"><div style="font-size:10px;font-weight:800;text-transform:uppercase;color:#626567;margin-bottom:3px">Date de naissance</div><div style="font-size:14px;font-weight:700">'+ddnFmt+'</div></div>' +
-    '<div style="background:#F4F6F7;border-radius:8px;padding:9px;border:1px solid #D5D8DC"><div style="font-size:10px;font-weight:800;text-transform:uppercase;color:#626567;margin-bottom:3px">Centre</div><div style="font-size:14px;font-weight:700">'+centre+'</div></div>' +
-    '<div style="background:#F4F6F7;border-radius:8px;padding:9px;border:1px solid #D5D8DC"><div style="font-size:10px;font-weight:800;text-transform:uppercase;color:#626567;margin-bottom:3px">Bâtiment</div><div style="font-size:14px;font-weight:700">'+batiment+'</div></div>' +
-    '<div style="background:#F4F6F7;border-radius:8px;padding:9px;border:1px solid #D5D8DC"><div style="font-size:10px;font-weight:800;text-transform:uppercase;color:#626567;margin-bottom:3px">Heure</div><div style="font-size:14px;font-weight:700">'+heure+'</div></div>' +
+    '<div style="background:#F4F6F7;border-radius:8px;padding:9px;border:1px solid #D5D8DC"><div style="font-size:10px;font-weight:800;text-transform:uppercase;color:#626567;margin-bottom:3px">RA</div><div style="font-size:14px;font-weight:700">'+esc(ra)+'</div></div>' +
+    '<div style="background:#F4F6F7;border-radius:8px;padding:9px;border:1px solid #D5D8DC"><div style="font-size:10px;font-weight:800;text-transform:uppercase;color:#626567;margin-bottom:3px">Date de naissance</div><div style="font-size:14px;font-weight:700">'+esc(ddnFmt)+'</div></div>' +
+    '<div style="background:#F4F6F7;border-radius:8px;padding:9px;border:1px solid #D5D8DC"><div style="font-size:10px;font-weight:800;text-transform:uppercase;color:#626567;margin-bottom:3px">Centre</div><div style="font-size:14px;font-weight:700">'+esc(centre)+'</div></div>' +
+    '<div style="background:#F4F6F7;border-radius:8px;padding:9px;border:1px solid #D5D8DC"><div style="font-size:10px;font-weight:800;text-transform:uppercase;color:#626567;margin-bottom:3px">Bâtiment</div><div style="font-size:14px;font-weight:700">'+esc(batiment)+'</div></div>' +
+    '<div style="background:#F4F6F7;border-radius:8px;padding:9px;border:1px solid #D5D8DC"><div style="font-size:10px;font-weight:800;text-transform:uppercase;color:#626567;margin-bottom:3px">Heure</div><div style="font-size:14px;font-weight:700">'+esc(heure)+'</div></div>' +
     '<div style="background:#F4F6F7;border-radius:8px;padding:9px;border:1px solid #D5D8DC"><div style="font-size:10px;font-weight:800;text-transform:uppercase;color:#626567;margin-bottom:3px">Date</div><div style="font-size:14px;font-weight:700">'+dateStr+'</div></div>' +
     '</div>' +
 
     (vitRows.length ? '<h2>Signes Vitaux</h2>' + vitHTML : '') +
 
     (hasRF ?
-      '<div class="rf"><h2>🚨 RED FLAG — PROBLÈME URGENT</h2><p style="font-size:13px;opacity:.9">Symptômes détectés :</p></div>' + symHTML
+      '<div class="rf"><h2>🚨 RED FLAG</h2><p style="font-size:13px;opacity:.9">Agissez immédiatement — appelez le 144</p></div>' + symHTML
       : '<div style="color:#1E8449;font-weight:700;font-size:15px;margin:10px 0;padding:12px;background:#EAFAF1;border-radius:10px">✅ Aucun Red Flag détecté</div>') +
 
     hotlineHTML +
-
-    '<h2>Protocole d\'intervention</h2>' +
-    '<div class="proto">' +
-    '<div class="p1"><div class="pn">1. Protéger</div><div class="pt">PROTÉGER</div><div class="pb">'+card.proteger.replace(/\n/g,'<br>')+'</div></div>' +
-    '<div class="p2"><div class="pn">2. Alerter</div><div class="pt">ALERTER</div><span class="anum">144</span><div class="pb">Où? Qui? Quoi? Quand? Combien?</div></div>' +
-    '<div class="p3"><div class="pn">3. Secourir</div><div class="pt">SECOURIR</div><div class="pb">'+card.secourir.replace(/\n/g,'<br>')+'</div></div>' +
-    '</div>' +
+    medicationHTML +
 
     '<footer>RED FLAGS — ORS Medic-Help · Enregistré le ' + dateStr + ' à ' + timeStr + ' · Dernière version validée : 18.07.2024</footer>' +
     '<script>window.addEventListener("load",function(){setTimeout(function(){window.print();},300);});<\/script>' +
@@ -1223,6 +1310,15 @@ function doPrint() {
     window.print();
   }
 }
+
+/* ==================== INPUT CLEANUP ==================== */
+['v_ta_sys', 'v_ta_dia'].forEach(function(id) {
+  var input = document.getElementById(id);
+  if (!input) return;
+  input.addEventListener('input', function() {
+    input.value = input.value.replace(/\D/g, '').slice(0, 3);
+  });
+});
 
 /* ==================== NEW PATIENT ==================== */
 // iOS Safari: add touchend as backup on Next button
@@ -1244,11 +1340,12 @@ function newPatient() {
     inp.classList.remove('error');
     document.getElementById('e_' + fields[i]).classList.remove('show');
   }
-  var vitals = ['ta','fc','spo2','temp','glyc','doul'];
+  var vitals = ['ta_sys','ta_dia','fc','spo2','temp','glyc','doul'];
   for (var j = 0; j < vitals.length; j++) {
     document.getElementById('v_' + vitals[j]).value = '';
   }
   document.getElementById('hotlineSel').value = '';
+  document.getElementById('medicationNotes').value = '';
   selectedCard = null;
   checkedSyms  = [];
   showScreen(0);
