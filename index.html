@@ -79,20 +79,70 @@ body {
   border-radius: 20px;
 }
 
-.step-dots {
+.install-btn {
   margin-left: auto;
-  display: flex;
+  flex: 0 0 auto;
+  border: 1px solid rgba(255,255,255,0.42);
+  background: rgba(255,255,255,0.14);
+  color: white;
+  border-radius: 999px;
+  padding: 6px 9px;
+  font: inherit;
+  font-size: 11px;
+  font-weight: 750;
+  line-height: 1;
+  cursor: pointer;
+  white-space: nowrap;
+  -webkit-tap-highlight-color: transparent;
+}
+.install-btn:active { background: rgba(255,255,255,0.26); }
+
+.install-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: none;
   align-items: center;
-  gap: 5px;
+  justify-content: center;
+  padding: 20px;
+  background: rgba(28,40,51,0.58);
+}
+.install-modal.open { display: flex; }
+.install-dialog {
+  width: min(100%, 420px);
+  background: white;
+  border-radius: 16px;
+  padding: 20px;
+  box-shadow: 0 18px 50px rgba(0,0,0,0.28);
+}
+.install-dialog h2 {
+  font-size: 19px;
+  margin-bottom: 10px;
+  color: var(--text);
+}
+.install-dialog p {
+  font-size: 15px;
+  line-height: 1.55;
+  color: #34495E;
+}
+.install-close {
+  width: 100%;
+  margin-top: 16px;
+  border: 0;
+  border-radius: 10px;
+  padding: 12px 14px;
+  background: var(--red);
+  color: white;
+  font: inherit;
+  font-weight: 750;
+  cursor: pointer;
 }
 
-.dot {
-  width: 7px; height: 7px;
-  border-radius: 50%;
-  background: rgba(255,255,255,0.35);
-  transition: all 0.3s;
+@media (max-width: 360px) {
+  .header { gap: 8px; padding-left: 12px; padding-right: 12px; }
+  .header-tag { padding: 4px 8px; letter-spacing: 1.3px; }
+  .install-btn { padding: 6px 8px; font-size: 10px; }
 }
-.dot.active { background: white; width: 18px; border-radius: 4px; }
 
 /* ===== CONTENT ===== */
 .content {
@@ -584,14 +634,7 @@ body {
       <div class="header-sub">Medic-Help</div>
     </div>
     <div class="header-tag">RED FLAGS</div>
-    <div class="step-dots" id="stepDots">
-      <div class="dot active" id="dot0"></div>
-      <div class="dot" id="dot1"></div>
-      <div class="dot" id="dot2"></div>
-      <div class="dot" id="dot3"></div>
-      <div class="dot" id="dot4"></div>
-      <div class="dot" id="dot5"></div>
-    </div>
+    <button type="button" class="install-btn" id="installBtn" onclick="handleInstallClick()" aria-label="Installer l’application">⬇ Installer</button>
   </div>
 
   <!-- CONTENT -->
@@ -817,6 +860,14 @@ body {
 
 </div><!-- /app -->
 
+<div class="install-modal" id="installModal" role="dialog" aria-modal="true" aria-labelledby="installTitle" onclick="closeInstallModal(event)">
+  <div class="install-dialog">
+    <h2 id="installTitle">Installer RED FLAGS</h2>
+    <p id="installMessage"></p>
+    <button type="button" class="install-close" onclick="closeInstallModal()">Fermer</button>
+  </div>
+</div>
+
 <script>
 /* ==================== APP HELPERS ==================== */
 if ('serviceWorker' in navigator && window.isSecureContext) {
@@ -824,6 +875,76 @@ if ('serviceWorker' in navigator && window.isSecureContext) {
     navigator.serviceWorker.register('./sw.js').catch(function() {});
   });
 }
+
+var deferredInstallPrompt = null;
+
+function isStandaloneApp() {
+  return window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+}
+
+function isIOSDevice() {
+  return /iphone|ipad|ipod/i.test(navigator.userAgent) ||
+    (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+}
+
+function updateInstallButton() {
+  var btn = document.getElementById('installBtn');
+  if (btn) btn.style.display = isStandaloneApp() ? 'none' : 'inline-flex';
+}
+
+window.addEventListener('beforeinstallprompt', function(event) {
+  event.preventDefault();
+  deferredInstallPrompt = event;
+  updateInstallButton();
+});
+
+window.addEventListener('appinstalled', function() {
+  deferredInstallPrompt = null;
+  updateInstallButton();
+});
+
+function openInstallModal(message) {
+  var modal = document.getElementById('installModal');
+  var text = document.getElementById('installMessage');
+  if (!modal || !text) return;
+  text.textContent = message;
+  modal.classList.add('open');
+}
+
+function closeInstallModal(event) {
+  var modal = document.getElementById('installModal');
+  if (!modal) return;
+  if (event && event.target !== modal) return;
+  modal.classList.remove('open');
+}
+
+async function handleInstallClick() {
+  if (isStandaloneApp()) {
+    updateInstallButton();
+    return;
+  }
+
+  if (deferredInstallPrompt) {
+    var promptEvent = deferredInstallPrompt;
+    deferredInstallPrompt = null;
+    await promptEvent.prompt();
+    try { await promptEvent.userChoice; } catch (e) {}
+    updateInstallButton();
+    return;
+  }
+
+  if (isIOSDevice()) {
+    openInstallModal('Dans Safari : touchez Partager, puis « En voir plus » si nécessaire, puis « Sur l’écran d’accueil ».');
+    return;
+  }
+
+  openInstallModal('Ouvrez le menu du navigateur, puis choisissez « Installer l’application » ou « Ajouter à l’écran d’accueil ».');
+}
+
+window.addEventListener('DOMContentLoaded', updateInstallButton);
+window.addEventListener('keydown', function(event) {
+  if (event.key === 'Escape') closeInstallModal();
+});
 
 function esc(value) {
   return String(value == null ? '' : value)
@@ -993,16 +1114,9 @@ function showScreen(n) {
   var mc = document.getElementById('mainContent');
   if (mc) mc.scrollTop = 0;
   currentScreen = n;
-  updateDots();
   updateButtons();
 }
 
-function updateDots() {
-  for (var i = 0; i < 6; i++) {
-    var d = document.getElementById('dot' + i);
-    d.className = 'dot' + (i === currentScreen ? ' active' : '');
-  }
-}
 
 function updateButtons() {
   var btnBack  = document.getElementById('btnBack');
