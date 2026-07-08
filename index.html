@@ -1142,6 +1142,11 @@ function updateButtons() {
 
 function goNext() {
   if (currentScreen === 0) {
+    if (!validatePage0()) {
+      var firstInvalid = document.querySelector('#screen0 .form-input.error');
+      if (firstInvalid) firstInvalid.focus();
+      return;
+    }
     showScreen(1);
   } else if (currentScreen === 2) {
     buildSymptoms();
